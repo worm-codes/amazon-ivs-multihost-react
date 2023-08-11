@@ -224,7 +224,6 @@ export default function Home() {
           playsInline
           hidden
           autoPlay
-          muted
           controls
         ></video>
       ))}
