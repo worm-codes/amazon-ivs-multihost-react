@@ -15,7 +15,7 @@ export default function Home() {
   const ingestUrl = "435def77beb6.global-contribute.live-video.net";
 
   const participantToken =
-    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTE3NjYyOTEsImlhdCI6MTY5MTc1MjQzMSwianRpIjoibWZNTWdXajV5T1JWIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL0V1NElmcXFTNGFCUCIsInRvcGljIjoiRXU0SWZxcVM0YUJQIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjIiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiRmF0aWggQXRlxZ8ifSwiY2FwYWJpbGl0aWVzIjp7ImFsbG93X3B1Ymxpc2giOnRydWUsImFsbG93X3N1YnNjcmliZSI6dHJ1ZX0sInZlcnNpb24iOiIwLjMifQ.MGYCMQCnD-65ygYytLtU5CDohvMB2mGjplAHK2ZpzKHeEwWtp9T9ArKA2RyKRcvdjgqdwe0CMQCdS1R_k-ALHQOIbr-sj0Lb1HJ52Y598KBOEgnbzMDlrId9iaof0uURbuIA1UtDv6o";
+    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTE3NjYyNzQsImlhdCI6MTY5MTc1NzE1NCwianRpIjoiYWhEckk3aTlyQVE0IiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL0V1NElmcXFTNGFCUCIsInRvcGljIjoiRXU0SWZxcVM0YUJQIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGYCMQC48rLdOJj6dKXqIvxOnN2E0GkgBhoHW0nKvWiiR7BryOC_73vIC4MWwKhTx3CMfqcCMQC4lBvAlAshKTggyfHkZxtt3ko9AmA6DgrHUE7OTYLzwcCkYPiEmN_UQGQFIls4e0c";
 
   const client = IVSBroadcastClient.create({
     streamConfig: IVSBroadcastClient.BASIC_LANDSCAPE,
@@ -29,6 +29,7 @@ export default function Home() {
   const participants = useRef([]);
   const videos = useRef([]);
   let stageRef = useRef();
+  const audios = useRef([]);
 
   useEffect(() => {
     const loadInitial = async () => {
@@ -44,7 +45,7 @@ export default function Home() {
       stageRef.current?.leave();
       client?.detachPreview();
     };
-  }, []);
+  }, [audios, videos]);
 
   const loadSelfInitials = async () => {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -80,6 +81,7 @@ export default function Home() {
       StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED,
       async (participant, streams) => {
         console.log("STAGE_PARTICIPANT_STREAMS_ADDED", participant);
+
         // add participants to broadcast if participant not exists
         if (!participants.current.find((p) => p.id === participant.id)) {
           participants.current = [...participants.current, participant];
@@ -87,27 +89,42 @@ export default function Home() {
 
         // wait render video elements that is created by vue convert it to reactjs
         //set time out 1 sec
-        // await new Promise((resolve) => setTimeout(resolve, 1000));
         // Wrap the code that needs to interact with DOM in a setTimeout
         setTimeout(async () => {
           const video = videos.current.find(
             (v) => v.dataset.participantId === participant.id
           );
-
-          if (!video) return;
-
+          const audio = audios.current.find(
+            (v) => v.dataset.participantId === participant.id
+          );
+          console.log("video", video);
+          console.log("audio", audio);
+          if (!video || !audio) return;
+          console.log("streamsssss", streams);
+          const streamAudio = participant.isLocal
+            ? streams.filter((stream) => stream.streamType === StreamType.AUDIO)
+            : streams;
+          // const streamAudio = streams.filter(
+          //   (stream) => stream.streamType === StreamType.AUDIO
+          // );
+          audio.srcObject = new MediaStream(
+            streamAudio.map((stream) => stream.mediaStreamTrack)
+          );
           const streamsToDisplay = participant.isLocal
             ? streams.filter((stream) => stream.streamType === StreamType.VIDEO)
             : streams;
+          // const streamVideo = streams.filter(
+          //   (stream) => stream.streamType === StreamType.VIDEO
+          // );
           video.srcObject = new MediaStream(
             streamsToDisplay.map((stream) => stream.mediaStreamTrack)
           );
-
+          await audio.play();
           await video.play();
         }, 10);
         await streams.forEach((stream) => {
           const inputStream = new MediaStream([stream.mediaStreamTrack]);
-
+          console.log("inputStream", inputStream);
           switch (stream.streamType) {
             case StreamType.VIDEO:
               try {
@@ -196,7 +213,7 @@ export default function Home() {
     }
     // If we still don't have permissions after requesting them display the error message
     if (!permissions.video) {
-      alert("Failed to get video permissions.");
+      alert("Failed to get video permissionss.");
     } else if (!permissions.audio) {
       alert("Failed to get audio permissions.");
     }
@@ -207,7 +224,12 @@ export default function Home() {
       videos.current.push(el);
     }
   };
-
+  const addToAudioRefs = (el) => {
+    if (el && !audios.current.includes(el)) {
+      audios.current.push(el);
+    }
+  };
+  console.log(participants.current);
   return (
     <div>
       <h1>canvas</h1>
@@ -217,15 +239,21 @@ export default function Home() {
       ></canvas>
       <h1>participants</h1>
       {participants.current.map((participant, index) => (
-        <video
-          key={index}
-          data-participant-id={participant.id}
-          ref={addToVideoRefs}
-          playsInline
-          hidden
-          autoPlay
-          controls
-        ></video>
+        <div key={index}>
+          <video
+            data-participant-id={participant.id}
+            ref={addToVideoRefs}
+            playsInline
+            autoPlay
+          ></video>
+          {!participant.isLocal && (
+            <audio
+              data-participant-id={participant.id}
+              ref={addToAudioRefs}
+              autoPlay
+            />
+          )}
+        </div>
       ))}
     </div>
   );
