@@ -8,14 +8,13 @@ import IVSBroadcastClient, {
   StreamType,
   SubscribeType,
 } from "amazon-ivs-web-broadcast";
-import { flushSync } from "react-dom";
 import { createRef, useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const ingestUrl = "435def77beb6.global-contribute.live-video.net";
 
   const participantToken =
-    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTE3NjYyNzQsImlhdCI6MTY5MTc1NzE1NCwianRpIjoiYWhEckk3aTlyQVE0IiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL0V1NElmcXFTNGFCUCIsInRvcGljIjoiRXU0SWZxcVM0YUJQIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGYCMQC48rLdOJj6dKXqIvxOnN2E0GkgBhoHW0nKvWiiR7BryOC_73vIC4MWwKhTx3CMfqcCMQC4lBvAlAshKTggyfHkZxtt3ko9AmA6DgrHUE7OTYLzwcCkYPiEmN_UQGQFIls4e0c";
+    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTE3NzcwOTksImlhdCI6MTY5MTc2NjM1OSwianRpIjoieWdlb3Y3bWdoSDJLIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlLzZSSVFjUFVnNllJdiIsInRvcGljIjoiNlJJUWNQVWc2WUl2IiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGQCMHroo7OdokMaQu5lCyiV-c3U2GvHtxhH7ow_lg_CHprkDuTMMbONV0IEGawZYNTlmAIwHNq49jNhajFxBV7pHTFXm6BPI_M_RpCLPo5C6axblcvlrkuvQPwYBOorWUBFzVKk";
 
   const client = IVSBroadcastClient.create({
     streamConfig: IVSBroadcastClient.BASIC_LANDSCAPE,
@@ -30,6 +29,7 @@ export default function Home() {
   const videos = useRef([]);
   let stageRef = useRef();
   const audios = useRef([]);
+  const [participantState, setParticipantState] = useState([]);
 
   useEffect(() => {
     const loadInitial = async () => {
@@ -84,6 +84,7 @@ export default function Home() {
 
         // add participants to broadcast if participant not exists
         if (!participants.current.find((p) => p.id === participant.id)) {
+          setParticipantState((prev) => [...prev, participant]);
           participants.current = [...participants.current, participant];
         }
 
@@ -94,37 +95,39 @@ export default function Home() {
           const video = videos.current.find(
             (v) => v.dataset.participantId === participant.id
           );
-          const audio = audios.current.find(
-            (v) => v.dataset.participantId === participant.id
+
+          if (!video) return;
+
+          const streamsToDisplay = streams.filter(
+            (stream) => stream.streamType === StreamType.VIDEO
           );
-          console.log("video", video);
-          console.log("audio", audio);
-          if (!video || !audio) return;
-          console.log("streamsssss", streams);
-          const streamAudio = participant.isLocal
-            ? streams.filter((stream) => stream.streamType === StreamType.AUDIO)
-            : streams;
-          // const streamAudio = streams.filter(
-          //   (stream) => stream.streamType === StreamType.AUDIO
-          // );
-          audio.srcObject = new MediaStream(
-            streamAudio.map((stream) => stream.mediaStreamTrack)
-          );
-          const streamsToDisplay = participant.isLocal
-            ? streams.filter((stream) => stream.streamType === StreamType.VIDEO)
-            : streams;
+
           // const streamVideo = streams.filter(
           //   (stream) => stream.streamType === StreamType.VIDEO
           // );
           video.srcObject = new MediaStream(
             streamsToDisplay.map((stream) => stream.mediaStreamTrack)
           );
-          await audio.play();
+
           await video.play();
+          console.log(audios.current);
+          if (!participant.isLocal) {
+            const audio = audios.current.find(
+              (v) => v.dataset.participantId === participant.id
+            );
+            const streamAudio = streams.filter(
+              (stream) => stream.streamType === StreamType.AUDIO
+            );
+            audio.srcObject = new MediaStream(
+              streamAudio.map((stream) => stream.mediaStreamTrack)
+            );
+
+            await audio.play();
+          }
         }, 10);
         await streams.forEach((stream) => {
           const inputStream = new MediaStream([stream.mediaStreamTrack]);
-          console.log("inputStream", inputStream);
+
           switch (stream.streamType) {
             case StreamType.VIDEO:
               try {
@@ -155,6 +158,7 @@ export default function Home() {
               break;
           }
         });
+        console.log("participants", participants.current);
         refreshVideoPositions();
       }
     );
@@ -229,7 +233,7 @@ export default function Home() {
       audios.current.push(el);
     }
   };
-  console.log(participants.current);
+
   return (
     <div>
       <h1>canvas</h1>
@@ -238,7 +242,7 @@ export default function Home() {
         style={{ width: "100%" }}
       ></canvas>
       <h1>participants</h1>
-      {participants.current.map((participant, index) => (
+      {participants?.current?.map((participant, index) => (
         <div key={index}>
           <video
             data-participant-id={participant.id}
