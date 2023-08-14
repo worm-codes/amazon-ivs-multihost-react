@@ -14,7 +14,7 @@ export default function Home() {
   const ingestUrl = "435def77beb6.global-contribute.live-video.net";
 
   const participantToken =
-    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTE3NzcwOTksImlhdCI6MTY5MTc2NjM1OSwianRpIjoieWdlb3Y3bWdoSDJLIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlLzZSSVFjUFVnNllJdiIsInRvcGljIjoiNlJJUWNQVWc2WUl2IiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGQCMHroo7OdokMaQu5lCyiV-c3U2GvHtxhH7ow_lg_CHprkDuTMMbONV0IEGawZYNTlmAIwHNq49jNhajFxBV7pHTFXm6BPI_M_RpCLPo5C6axblcvlrkuvQPwYBOorWUBFzVKk";
+    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIwMjU0NTQsImlhdCI6MTY5MjAwMTY5NCwianRpIjoiNGJDMmcyTFM3RENIIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL0NhN0lJd0ttbGlFSiIsInRvcGljIjoiQ2E3SUl3S21saUVKIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGUCMBwgyzQOAQz0MNANVmZjFO-D0zAzZh8Rxmr_MdzKh-R4FgMU0wr6OCKxwaP32vVf7AIxAJpgKJHD_0plp83M9bhZP2hXC-FcnSSaqa0Frsjx-GnE3pMv2z9MLTRTx9HeTTNgbw";
 
   const client = IVSBroadcastClient.create({
     streamConfig: IVSBroadcastClient.BASIC_LANDSCAPE,
@@ -31,6 +31,19 @@ export default function Home() {
   const audios = useRef([]);
   const [participantState, setParticipantState] = useState([]);
 
+  const [stateRefresh, setStateRefresh] = useState(false);
+
+  const addToVideoRefs = (el) => {
+    if (el && !videos.current.includes(el)) {
+      videos.current.push(el);
+    }
+  };
+  const addToAudioRefs = (el) => {
+    if (el && !audios.current.includes(el)) {
+      audios.current.push(el);
+    }
+  };
+
   useEffect(() => {
     const loadInitial = async () => {
       await usePermissions();
@@ -44,6 +57,7 @@ export default function Home() {
       console.log("cleanup runss");
       stageRef.current?.leave();
       client?.detachPreview();
+      client?.stopBroadcast();
     };
   }, [audios, videos]);
 
@@ -84,82 +98,120 @@ export default function Home() {
 
         // add participants to broadcast if participant not exists
         if (!participants.current.find((p) => p.id === participant.id)) {
-          setParticipantState((prev) => [...prev, participant]);
           participants.current = [...participants.current, participant];
         }
 
         // wait render video elements that is created by vue convert it to reactjs
         //set time out 1 sec
         // Wrap the code that needs to interact with DOM in a setTimeout
+        // setParticipantState((prev) => [...prev, participant]);
         setTimeout(async () => {
-          const video = videos.current.find(
-            (v) => v.dataset.participantId === participant.id
-          );
+          const videoId = `video-${participant.id}`;
+          const audioId = `audio-${participant.id}`;
+          const existingVideo = document.getElementById(videoId);
+          const existingAudio = document.getElementById(audioId);
+          if (!existingVideo) {
+            const videoElement = document.createElement("video");
+            videoElement.id = videoId;
+            videoElement.autoplay = true;
+            const streamsToDisplay = streams.filter(
+              (stream) => stream.streamType === StreamType.VIDEO
+            );
+            videoElement.srcObject = new MediaStream(
+              streamsToDisplay.map((stream) => stream.mediaStreamTrack)
+            );
 
-          if (!video) return;
+            const videoContainer = document.getElementById("video-container");
+            videoContainer.appendChild(videoElement);
 
-          const streamsToDisplay = streams.filter(
-            (stream) => stream.streamType === StreamType.VIDEO
-          );
+            await videoElement.play();
 
-          // const streamVideo = streams.filter(
+            if (!participant.isLocal && !existingAudio) {
+              const audioElement = document.createElement("audio");
+              audioElement.id = audioId;
+              audioElement.autoplay = true;
+              const streamAudio = streams.filter(
+                (stream) => stream.streamType === StreamType.AUDIO
+              );
+
+              audioElement.srcObject = new MediaStream(
+                streamAudio.map((stream) => stream.mediaStreamTrack)
+              );
+
+              await audioElement.play();
+
+              videoContainer.appendChild(audioElement);
+            }
+          }
+
+          // const video = videos.current.find(
+          //   (v) => v.dataset.participantId === participant.id
+          // );
+          // console.log(videos.current);
+
+          // if (!video) return;
+
+          // const streamsToDisplay = streams.filter(
           //   (stream) => stream.streamType === StreamType.VIDEO
           // );
-          video.srcObject = new MediaStream(
-            streamsToDisplay.map((stream) => stream.mediaStreamTrack)
-          );
 
-          await video.play();
-          console.log(audios.current);
-          if (!participant.isLocal) {
-            const audio = audios.current.find(
-              (v) => v.dataset.participantId === participant.id
-            );
-            const streamAudio = streams.filter(
-              (stream) => stream.streamType === StreamType.AUDIO
-            );
-            audio.srcObject = new MediaStream(
-              streamAudio.map((stream) => stream.mediaStreamTrack)
-            );
+          // // const streamVideo = streams.filter(
+          // //   (stream) => stream.streamType === StreamType.VIDEO
+          // // );
+          // video.srcObject = new MediaStream(
+          //   streamsToDisplay.map((stream) => stream.mediaStreamTrack)
+          // );
 
-            await audio.play();
-          }
-        }, 10);
-        await streams.forEach((stream) => {
-          const inputStream = new MediaStream([stream.mediaStreamTrack]);
+          // await video.play();
+          // console.log(audios.current);
+          // if (!participant.isLocal) {
+          //   const audio = audios.current.find(
+          //     (v) => v.dataset.participantId === participant.id
+          //   );
+          //   const streamAudio = streams.filter(
+          //     (stream) => stream.streamType === StreamType.AUDIO
+          //   );
+          //   audio.srcObject = new MediaStream(
+          //     streamAudio.map((stream) => stream.mediaStreamTrack)
+          //   );
 
-          switch (stream.streamType) {
-            case StreamType.VIDEO:
-              try {
-                client.addVideoInputDevice(
-                  inputStream,
-                  `video-${participant.id}`,
-                  {
-                    index: 0,
-                    width:
-                      streamConfig.maxResolution.width /
-                      participants.current.length,
-                    x:
-                      (participants.current.length - 1) *
-                      (streamConfig.maxResolution.width /
-                        participants.current.length),
-                  }
-                );
-              } catch (err) {
-                console.log(err);
-              }
+          //   await audio.play();
+          // }
+        }, 1000);
+        setTimeout(async () => {
+          await Promise.all([
+            ...streams
+              .filter((stream) => stream.streamType === StreamType.VIDEO)
+              .map(
+                async (stream) =>
+                  await client.addVideoInputDevice(
+                    new MediaStream([stream.mediaStreamTrack]),
+                    `video-${participant.id}`,
+                    {
+                      index: 0,
+                      width:
+                        streamConfig.maxResolution.width / participants.length,
+                      x:
+                        (participants.length - 1) *
+                        (streamConfig.maxResolution.width /
+                          participants.length),
+                    }
+                  )
+              ),
+            ...streams
+              .filter((stream) => stream.streamType === StreamType.AUDIO)
+              .map(
+                async (stream) =>
+                  await client.addAudioInputDevice(
+                    new MediaStream([stream.mediaStreamTrack]),
+                    `audio-${participant.id}`
+                  )
+              ),
+          ]);
 
-              break;
-            case StreamType.AUDIO:
-              client.addAudioInputDevice(
-                inputStream,
-                `audio-${participant.id}`
-              );
-              break;
-          }
-        });
-        console.log("participants", participants.current);
-        refreshVideoPositions();
+          console.log("participants", participants.current);
+          refreshVideoPositions();
+        }, 1000);
       }
     );
 
@@ -223,17 +275,15 @@ export default function Home() {
     }
   };
 
-  const addToVideoRefs = (el) => {
-    if (el && !videos.current.includes(el)) {
-      videos.current.push(el);
-    }
+  const startBroadcast = async () => {
+    client.config.ingestEndpoint = ingestUrl;
+    await client.getAudioContext().resume();
+    await client.startBroadcast(
+      "sk_eu-central-1_2gx2v0PC7yK0_VhXEfyhxlqBmEhqzxV3agrKcw7wSUR"
+    );
   };
-  const addToAudioRefs = (el) => {
-    if (el && !audios.current.includes(el)) {
-      audios.current.push(el);
-    }
-  };
-
+  console.log(client);
+  console.log(participants.current);
   return (
     <div>
       <h1>canvas</h1>
@@ -242,7 +292,9 @@ export default function Home() {
         style={{ width: "100%" }}
       ></canvas>
       <h1>participants</h1>
-      {participants?.current?.map((participant, index) => (
+
+      <div id="video-container"></div>
+      {/* {participants.current?.map((participant, index) => (
         <div key={index}>
           <video
             data-participant-id={participant.id}
@@ -258,7 +310,9 @@ export default function Home() {
             />
           )}
         </div>
-      ))}
+      ))} */}
+      <h1>start broadcast</h1>
+      <button onClick={startBroadcast}>start broadcast</button>
     </div>
   );
 }
