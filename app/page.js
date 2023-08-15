@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
-import Broadcast from "./components/Broadcast";
+
+import dynamic from "next/dynamic";
+const Broadcast = dynamic(() => import("./components/Broadcast"), {
+  ssr: false,
+});
 
 export default function Home() {
   const [nowPlaying, setNowPlaying] = useState(false);
