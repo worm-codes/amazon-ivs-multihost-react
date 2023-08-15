@@ -90,7 +90,6 @@ export default function Broadcast({ participantToken, streamKey }) {
           // const videoId = `video-${participant.id}`;
           const audioId = `audio-${participant.id}`;
           // const existingVideo = document.getElementById(videoId);
-          const existingAudio = document.getElementById(audioId);
           // if (!existingVideo) {
           //   const videoElement = document.createElement("video");
           //   videoElement.id = videoId;
@@ -109,7 +108,7 @@ export default function Broadcast({ participantToken, streamKey }) {
           console.log(participant.isLocal);
           console.log(existingAudio);
 
-          if (!participant.isLocal && !existingAudio) {
+          if (!participant.isLocal) {
             const audioElement = document.createElement("audio");
             audioElement.id = audioId;
             audioElement.autoplay = true;
@@ -209,18 +208,20 @@ export default function Broadcast({ participantToken, streamKey }) {
 
         client.removeVideoInputDevice(`video-${participant.id}`);
         client.removeAudioInputDevice(`audio-${participant.id}`);
+        const audioContainer = document.getElementById("audio-container");
         refreshVideoPositions();
         const audioId = `audio-${participant.id}`;
+
         const audioElementToRemove = document.getElementById(audioId);
+        console.log(audioElementToRemove);
+        console.log(audioContainer.contains(audioElementToRemove));
         if (
           audioElementToRemove &&
           audioContainer.contains(audioElementToRemove)
         ) {
-          // Pause the audio before removing (optional)
-          audioElementToRemove.pause();
-
           // Remove the audio element from the DOM
           audioContainer.removeChild(audioElementToRemove);
+          console.log("removeddd audio");
         }
 
         // stageRef.current?.refreshStrategy();
