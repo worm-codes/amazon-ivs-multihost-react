@@ -1,10 +1,7 @@
 "use client";
 import { useState } from "react";
-
-import dynamic from "next/dynamic";
-const Broadcast = dynamic(() => import("./components/Broadcast"), {
-  ssr: false,
-});
+import Broadcast from "./components/Broadcast";
+import React, { Suspense } from "react";
 
 export default function Home() {
   const [nowPlaying, setNowPlaying] = useState(false);
@@ -13,10 +10,12 @@ export default function Home() {
   return (
     <div>
       {nowPlaying ? (
-        <Broadcast
-          participantToken={participantToken}
-          streamKey={streamKey}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <Broadcast
+            participantToken={participantToken}
+            streamKey={streamKey}
+          />
+        </Suspense>
       ) : (
         <form action="">
           <input
