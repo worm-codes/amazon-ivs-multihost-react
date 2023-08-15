@@ -14,7 +14,7 @@ export default function Home() {
   const ingestUrl = "435def77beb6.global-contribute.live-video.net";
 
   const participantToken =
-    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIwMjU0NTQsImlhdCI6MTY5MjAwMTY5NCwianRpIjoiNGJDMmcyTFM3RENIIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL0NhN0lJd0ttbGlFSiIsInRvcGljIjoiQ2E3SUl3S21saUVKIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGUCMBwgyzQOAQz0MNANVmZjFO-D0zAzZh8Rxmr_MdzKh-R4FgMU0wr6OCKxwaP32vVf7AIxAJpgKJHD_0plp83M9bhZP2hXC-FcnSSaqa0Frsjx-GnE3pMv2z9MLTRTx9HeTTNgbw";
+    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIxMTU0NTYsImlhdCI6MTY5MjA4OTIzNiwianRpIjoiQ1JyVjNqZDNUMldkIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL1BnM2tBVWtYNDN3aiIsInRvcGljIjoiUGcza0FVa1g0M3dqIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGQCMCW1dmZNTeOPYiZG4R4C8oasDibtukuEam0qo1t5tI5Zz_H_oViUMqlhD0CKIKKgoQIwfsJ1xYODJyEk9JLzaq7WBzqqQRS8dpHsnwIv4b4gs_24hKfOfIXE1McF2pop1jjU";
 
   const client = IVSBroadcastClient.create({
     streamConfig: IVSBroadcastClient.BASIC_LANDSCAPE,
@@ -106,43 +106,43 @@ export default function Home() {
         // Wrap the code that needs to interact with DOM in a setTimeout
         // setParticipantState((prev) => [...prev, participant]);
         setTimeout(async () => {
-          const videoId = `video-${participant.id}`;
+          // const videoId = `video-${participant.id}`;
           const audioId = `audio-${participant.id}`;
-          const existingVideo = document.getElementById(videoId);
+          // const existingVideo = document.getElementById(videoId);
           const existingAudio = document.getElementById(audioId);
-          if (!existingVideo) {
-            const videoElement = document.createElement("video");
-            videoElement.id = videoId;
-            videoElement.autoplay = true;
-            const streamsToDisplay = streams.filter(
-              (stream) => stream.streamType === StreamType.VIDEO
+          // if (!existingVideo) {
+          //   const videoElement = document.createElement("video");
+          //   videoElement.id = videoId;
+          //   videoElement.autoplay = true;
+          //   const streamsToDisplay = streams.filter(
+          //     (stream) => stream.streamType === StreamType.VIDEO
+          //   );
+          //   videoElement.srcObject = new MediaStream(
+          //     streamsToDisplay.map((stream) => stream.mediaStreamTrack)
+          //   );
+
+          const videoContainer = document.getElementById("video-container");
+          //   videoContainer.appendChild(videoElement);
+
+          //   await videoElement.play();
+
+          if (!participant.isLocal && !existingAudio) {
+            const audioElement = document.createElement("audio");
+            audioElement.id = audioId;
+            audioElement.autoplay = true;
+            const streamAudio = streams.filter(
+              (stream) => stream.streamType === StreamType.AUDIO
             );
-            videoElement.srcObject = new MediaStream(
-              streamsToDisplay.map((stream) => stream.mediaStreamTrack)
+
+            audioElement.srcObject = new MediaStream(
+              streamAudio.map((stream) => stream.mediaStreamTrack)
             );
 
-            const videoContainer = document.getElementById("video-container");
-            videoContainer.appendChild(videoElement);
+            await audioElement.play();
 
-            await videoElement.play();
-
-            if (!participant.isLocal && !existingAudio) {
-              const audioElement = document.createElement("audio");
-              audioElement.id = audioId;
-              audioElement.autoplay = true;
-              const streamAudio = streams.filter(
-                (stream) => stream.streamType === StreamType.AUDIO
-              );
-
-              audioElement.srcObject = new MediaStream(
-                streamAudio.map((stream) => stream.mediaStreamTrack)
-              );
-
-              await audioElement.play();
-
-              videoContainer.appendChild(audioElement);
-            }
+            videoContainer.appendChild(audioElement);
           }
+          // }
 
           // const video = videos.current.find(
           //   (v) => v.dataset.participantId === participant.id
@@ -279,11 +279,11 @@ export default function Home() {
     client.config.ingestEndpoint = ingestUrl;
     await client.getAudioContext().resume();
     await client.startBroadcast(
-      "sk_eu-central-1_2gx2v0PC7yK0_VhXEfyhxlqBmEhqzxV3agrKcw7wSUR"
+      "sk_eu-central-1_RjoxdrtHZKjf_jshOEBiJiLpgcnCgFUhq0EE7Jaaj7r"
     );
   };
-  console.log(client);
-  console.log(participants.current);
+  console.log(canvas.current);
+
   return (
     <div>
       <h1>canvas</h1>
