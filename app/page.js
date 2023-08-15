@@ -14,7 +14,7 @@ export default function Home() {
   const ingestUrl = "435def77beb6.global-contribute.live-video.net";
 
   const participantToken =
-    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIxMTU0NTYsImlhdCI6MTY5MjA4OTIzNiwianRpIjoiQ1JyVjNqZDNUMldkIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL1BnM2tBVWtYNDN3aiIsInRvcGljIjoiUGcza0FVa1g0M3dqIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGQCMCW1dmZNTeOPYiZG4R4C8oasDibtukuEam0qo1t5tI5Zz_H_oViUMqlhD0CKIKKgoQIwfsJ1xYODJyEk9JLzaq7WBzqqQRS8dpHsnwIv4b4gs_24hKfOfIXE1McF2pop1jjU";
+    "eyJhbGciOiJLTVMiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIxMTU0NDcsImlhdCI6MTY5MjA5MDI0NywianRpIjoiaVk0U0RRYXV0dERoIiwicmVzb3VyY2UiOiJhcm46YXdzOml2czpldS1jZW50cmFsLTE6NDYxMDc0NzU1NzI2OnN0YWdlL1BnM2tBVWtYNDN3aiIsInRvcGljIjoiUGcza0FVa1g0M3dqIiwiZXZlbnRzX3VybCI6IndzczovL2V1LWNlbnRyYWwtMS5ldmVudHMubGl2ZS12aWRlby5uZXQiLCJ3aGlwX3VybCI6Imh0dHBzOi8vNDM1ZGVmNzdiZWI2Lmdsb2JhbC53aGlwLmxpdmUtdmlkZW8ubmV0IiwidXNlcl9pZCI6IjEiLCJhdHRyaWJ1dGVzIjp7ImRpc3BsYXlOYW1lIjoiQWxpIEthYW4gS2lyacWfIn0sImNhcGFiaWxpdGllcyI6eyJhbGxvd19wdWJsaXNoIjp0cnVlLCJhbGxvd19zdWJzY3JpYmUiOnRydWV9LCJ2ZXJzaW9uIjoiMC4zIn0.MGUCMGSZhBmUDVcRO9RIjetRbPmU3uUPluK4y4Cc0vASBXjHuzyIFXReOOPBthDEp_ciZQIxAOiIl7ah9wd-HuXCN3d_j1K94M0q58Y7AUka1cjn7GxVBTsB30Q8pBfpqg7Xtz19Jg";
 
   const client = IVSBroadcastClient.create({
     streamConfig: IVSBroadcastClient.BASIC_LANDSCAPE,
@@ -125,6 +125,8 @@ export default function Home() {
           //   videoContainer.appendChild(videoElement);
 
           //   await videoElement.play();
+          console.log(participant.isLocal);
+          console.log(existingAudio);
 
           if (!participant.isLocal && !existingAudio) {
             const audioElement = document.createElement("audio");
@@ -133,14 +135,14 @@ export default function Home() {
             const streamAudio = streams.filter(
               (stream) => stream.streamType === StreamType.AUDIO
             );
+            console.log(streamAudio);
 
             audioElement.srcObject = new MediaStream(
               streamAudio.map((stream) => stream.mediaStreamTrack)
             );
+            videoContainer.appendChild(audioElement);
 
             await audioElement.play();
-
-            videoContainer.appendChild(audioElement);
           }
           // }
 
