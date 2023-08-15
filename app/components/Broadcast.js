@@ -202,7 +202,18 @@ export default function Broadcast({ participantToken, streamKey }) {
       StageEvents.STAGE_PARTICIPANT_STREAMS_REMOVED,
       async (participant) => {
         console.log("STAGE_PARTICIPANT_STREAMS_REMOVED:", participant);
+        const audioId = `audio-${participant.id}`;
+        const audioElementToRemove = document.getElementById(audioId);
+        if (
+          audioElementToRemove &&
+          audioContainer.contains(audioElementToRemove)
+        ) {
+          // Pause the audio before removing (optional)
+          audioElementToRemove.pause();
 
+          // Remove the audio element from the DOM
+          audioContainer.removeChild(audioElementToRemove);
+        }
         // remove participant from broadcast
         participants.current = participants.current.filter(
           (p) => p.id !== participant.id
