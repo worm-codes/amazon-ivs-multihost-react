@@ -104,10 +104,6 @@ export default function Broadcast({ participantToken, streamKey }) {
           const audioContainer = document.getElementById("audio-container");
           //   audioContainer.appendChild(videoElement);
 
-          //   await videoElement.play();
-          console.log(participant.isLocal);
-          console.log(existingAudio);
-
           if (!participant.isLocal) {
             const audioElement = document.createElement("audio");
             audioElement.id = audioId;
@@ -220,6 +216,7 @@ export default function Broadcast({ participantToken, streamKey }) {
           audioContainer.contains(audioElementToRemove)
         ) {
           // Remove the audio element from the DOM
+          await audioElementToRemove.pause();
           audioContainer.removeChild(audioElementToRemove);
           console.log("removeddd audio");
         }
